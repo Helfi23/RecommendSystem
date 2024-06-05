@@ -1,8 +1,4 @@
-fastapi
-uvicorn
-jinja2
-mysql-connector-python
 pandas
 numpy
 scikit-learn
-a2wsgi
+pyngrok
