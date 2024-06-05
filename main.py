@@ -1,58 +1,45 @@
 import streamlit as st
-import mysql.connector
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from pyngrok import ngrok
+from pyngrok import ngrok, conf
+
+# Konfigurasi ngrok
+ngrok_path = "/path/to/ngrok"  # Sesuaikan dengan path ngrok Anda
+conf.get_default().ngrok_path = ngrok_path
 
 # Fungsi untuk memuat data Collaborative Filtering (CF)
 def load_data_CF():
     try:
-        conn = mysql.connector.connect(user='root', host='localhost', database='db_course')
-        cursor = conn.cursor()
-        cursor.execute("""
+        conn = st.connection("my_sql_connection").connect()
+        query = """
         SELECT DISTINCT r.user_id AS user_id, r.course_id AS course_id, r.rating AS rating
                        FROM histories h 
                        JOIN reviews r ON h.course_id = r.course_id JOIN materials m ON m.id = h.material_id  JOIN chapters cp ON m.chapter_id = cp.id JOIN courses c ON r.course_id = c.id JOIN categoris ct ON c.categori_id = ct.id;
-        """)
-
-        records = cursor.fetchall()
-        columns = ["user_id", "course_id", "rating"]
-        cf = pd.DataFrame(records, columns=columns)
+        """
+        cf = pd.read_sql(query, conn)
         
         # Pastikan kolom rating adalah numerik
         cf['rating'] = pd.to_numeric(cf['rating'], errors='coerce')
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
-
-    return cf
+        return cf
+    except Exception as err:
+        st.error(f"Error: {err}")
+        return pd.DataFrame(columns=["user_id", "course_id", "rating"])
 
 # Fungsi untuk memuat data Content-Based Filtering (CBF)
 def load_data_CBF():
     try:
-        conn = mysql.connector.connect(user='root', host='localhost', database='db_course')
-        cursor = conn.cursor()
-        cursor.execute("""
+        conn = st.connection("my_sql_connection").connect()
+        query = """
         SELECT DISTINCT  r.user_id AS user_id,  r.course_id AS course_id,  c.course_title AS course_title,  c.about AS description,  r.rating AS rating,  ct.type AS category_type
                        FROM histories h JOIN reviews r ON h.course_id = r.course_id JOIN materials m ON h.material_id = m.id JOIN chapters cp ON m.chapter_id = cp.id JOIN courses c ON r.course_id = c.id JOIN categoris ct ON c.categori_id = ct.id;
-        """)
-
-        records = cursor.fetchall()
-        columns = [
-            "user_id", "course_id", "course_title", "description", "rating",  "category_type"
-        ]
-        cbf = pd.DataFrame(records, columns=columns)
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
-
-    return cbf
+        """
+        cbf = pd.read_sql(query, conn)
+        return cbf
+    except Exception as err:
+        st.error(f"Error: {err}")
+        return pd.DataFrame(columns=["user_id", "course_id", "course_title", "description", "rating",  "category_type"])
 
 # Muat data CF dan CBF
 cf = load_data_CF()
