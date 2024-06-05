@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommended Courses</title>
+</head>
+<body>
+    <h2>Recommended Courses</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Course ID</th>
+                <th>Course Title</th>
+                <th>About Course</th>
+                <th>Category Type</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+            <tr>
+                <td>{{ course.course_id }}</td>
+                <td>{{ course.course_title }}</td>
+                <td>{{ course.About_Course }}</td>
+                <td>{{ course.category_type }}</td>
+                <td>{{ course.rating }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
